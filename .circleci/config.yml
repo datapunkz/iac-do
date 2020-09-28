@@ -32,7 +32,7 @@ jobs:
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
-          docker-image-name: DOCKER_LOGIN/$IMAGE_NAME
+          docker-image-name: $DOCKER_LOGIN/$IMAGE_NAME
   run_tests:
     docker:
       - image: circleci/node:12
@@ -82,7 +82,7 @@ jobs:
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
+            export DOCKER_IMAGE="docker_image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
             cd terraform/do_k8s_deploy_app
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
@@ -137,8 +137,7 @@ jobs:
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"            
-            cd do_k8s_deploy_app
+            cd do_create_k8s
             terraform init
             terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
