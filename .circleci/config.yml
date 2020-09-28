@@ -154,7 +154,7 @@ workflows:
           type: approval
           requires:
             - create_do_k8s_cluster
-      - do_k8s_deploy_app:
+      - deploy_to_k8s:
           requires:
             - approve_deploy_app
       - smoketest_k8s_deployment:
