@@ -41,7 +41,7 @@ resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   }
 }
 
-resource "local_file" "k8s_config" {
-  content  = digitalocean_kubernetes_cluster.k8s_cluster.kube_config[0].raw_config
-  filename = pathexpand("~/.kube/${var.cluster_name}-config.yaml")
-}
+# resource "local_file" "k8s_config" {
+#   content  = digitalocean_kubernetes_cluster.k8s_cluster.kube_config[0].raw_config
+#   filename = pathexpand("~/.kube/${var.cluster_name}-config.yaml")
+# }
