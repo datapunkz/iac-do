@@ -159,12 +159,11 @@ workflows:
             - approve_deploy_app
       - smoketest_k8s_deployment:
           requires:
-            - do_k8s_deploy_app
-
+            - deploy_to_k8s
       - approve_destroy:
           type: approval
           requires:
-            - do_k8s_deploy_app
+            - deploy_to_k8s
             - smoketest_k8s_deployment
       - destroy_k8s_cluster:
           requires:
