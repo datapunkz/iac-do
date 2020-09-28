@@ -56,8 +56,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Create .terraformrc file locally
-        command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
       - run:
           name: Deploy Microservices to K8s on DigitalOcean 
           command: |
@@ -75,8 +75,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Create .terraformrc file locally
-        command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
