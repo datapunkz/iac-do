@@ -24,11 +24,11 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-          export TAG=0.0.<< pipeline.number >>
-          export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME
-          docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
-          echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-          docker push $DOCKER_LOGIN/$IMAGE_NAME
+            export TAG=0.0.<< pipeline.number >>
+            export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME
+            docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
+            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push $DOCKER_LOGIN/$IMAGE_NAME
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
@@ -61,15 +61,15 @@ jobs:
       - run:
           name: Deploy Microservices to K8s on DigitalOcean 
           command: |
-          export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
-          export TAG=0.0.<< pipeline.number >>
-          export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-          cd terraform/do_create_k8s
-          terraform init
-          terraform apply \
-            -var do_token=$DIGITAL_OCEAN_TOKEN \
-            -var cluster_name=$CLUSTER_NAME \
-            -auto-approve
+            export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.0.<< pipeline.number >>
+            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
+            cd terraform/do_create_k8s
+            terraform init
+            terraform apply \
+              -var do_token=$DIGITAL_OCEAN_TOKEN \
+              -var cluster_name=$CLUSTER_NAME \
+              -auto-approve
   deploy_to_k8s:
     docker:
       - image: ariv3ra/terraform-gcp:tf-v0.13.3
@@ -81,20 +81,20 @@ jobs:
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
-          export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
-          export TAG=0.0.<< pipeline.number >>
-          export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-          cd terraform/do_k8s_deploy_app
-          terraform init
-          terraform apply \
-            -var do_token=$DIGITAL_OCEAN_TOKEN \
-            -var cluster_name=$CLUSTER_NAME \
-            -var docker_image=$DOCKER_IMAGE \
-            -auto-approve
-            # Save the Load Balancer Public IP Address
-            export ENDPOINT="$(terraform output lb_public_ip)"
-            mkdir -p /tmp/do_k8s/
-            echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
+            export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.0.<< pipeline.number >>
+            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
+            cd terraform/do_k8s_deploy_app
+            terraform init
+            terraform apply \
+              -var do_token=$DIGITAL_OCEAN_TOKEN \
+              -var cluster_name=$CLUSTER_NAME \
+              -var docker_image=$DOCKER_IMAGE \
+              -auto-approve
+              # Save the Load Balancer Public IP Address
+              export ENDPOINT="$(terraform output lb_public_ip)"
+              mkdir -p /tmp/do_k8s/
+              echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
       - persist_to_workspace:
           root: /tmp/do_k8s
           paths:
