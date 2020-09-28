@@ -59,7 +59,7 @@ jobs:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
       - run:
-          name: Deploy Microservices to K8s on DigitalOcean 
+          name: Create K8s Cluster on DigitalOcean 
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
@@ -84,6 +84,8 @@ jobs:
             export TAG=0.0.<< pipeline.number >>
             export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
             cd terraform/do_k8s_deploy_app
+            doctl auth init -t $DIGITAL_OCEAN_TOKEN
+            doctl kubernetes cluster kubeconfig save $DIGITAL_CLUSTER_NAME
             terraform init
             terraform apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
