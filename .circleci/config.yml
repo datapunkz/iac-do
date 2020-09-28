@@ -63,7 +63,6 @@ jobs:
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
             cd terraform/do_create_k8s
             terraform init
             terraform apply \
@@ -107,7 +106,7 @@ jobs:
       - attach_workspace:
           at: /tmp/do_k8s/
       - run:
-          name: Smoke Test GKE Deployment
+          name: Smoke Test K8s App Deployment
           command: |
             source /tmp/do_k8s/dok8s-endpoint
             ./test/smoke_test $ENDPOINT              
