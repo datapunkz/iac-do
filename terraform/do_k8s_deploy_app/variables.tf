@@ -12,7 +12,7 @@ variable "cluster_name" {
   }  
 }
 
-variable "docker-image" {
+variable "docker_image" {
   type        = string
   description = "name of the docker image to deploy"
   default     = "ariv3ra/nodejs-circleci:latest"

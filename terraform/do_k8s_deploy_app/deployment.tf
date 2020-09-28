@@ -41,7 +41,7 @@ resource "kubernetes_deployment" "app" {
 
       spec {
         container {
-          image = var.docker-image
+          image = var.docker_image
           name  = var.cluster_name
           port {
             name           = "port-5000"

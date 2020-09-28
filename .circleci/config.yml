@@ -141,7 +141,6 @@ jobs:
             terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
-              -var docker_image=$DOCKER_IMAGE \
               -auto-approve
 workflows:
   scan_deploy:
