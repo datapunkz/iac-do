@@ -1,0 +1,172 @@
+version: 2.1
+orbs:
+  snyk: snyk/snyk@0.0.12  
+jobs:
+  scan_app:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - run:
+          name: Snyk Scan Application files 
+          command: |
+            echo "Use snyk Orb here"
+      - snyk/scan:
+          fail-on-issues: false
+          monitor-on-build: false
+  scan_push_docker_image:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: Build Docker image
+          command: |
+          export TAG=0.0.<< pipeline.number >>
+          export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME
+          docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
+          echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+          docker push $DOCKER_LOGIN/$IMAGE_NAME
+      - snyk/scan:
+          fail-on-issues: false
+          monitor-on-build: false
+          docker-image-name: DOCKER_LOGIN/$IMAGE_NAME
+  run_tests:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - run:
+          name: Install npm dependencies
+          command: |
+            npm install --save
+      - run:
+          name: Run Unit Tests
+          command: |
+            ./node_modules/mocha/bin/mocha test/ --reporter mochawesome --reporter-options reportDir=test-results,reportFilename=test-results
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results          
+  create_do_k8s_cluster:
+    docker:
+      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+    steps:
+      - checkout
+      - run:
+        name: Create .terraformrc file locally
+        command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
+      - run:
+          name: Deploy Microservices to K8s on DigitalOcean 
+          command: |
+          export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+          export TAG=0.0.<< pipeline.number >>
+          export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
+          cd terraform/do_create_k8s
+          terraform init
+          terraform apply \
+            -var do_token=$DIGITAL_OCEAN_TOKEN \
+            -var cluster_name=$CLUSTER_NAME \
+            -auto-approve
+  deploy_to_k8s:
+    docker:
+      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+    steps:
+      - checkout
+      - run:
+        name: Create .terraformrc file locally
+        command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - run:
+          name: Deploy Application to K8s on DigitalOcean 
+          command: |
+          export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+          export TAG=0.0.<< pipeline.number >>
+          export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
+          cd terraform/do_k8s_deploy_app
+          terraform init
+          terraform apply \
+            -var do_token=$DIGITAL_OCEAN_TOKEN \
+            -var cluster_name=$CLUSTER_NAME \
+            -var docker_image=$DOCKER_IMAGE \
+            -auto-approve
+            # Save the Load Balancer Public IP Address
+            export ENDPOINT="$(terraform output lb_public_ip)"
+            mkdir -p /tmp/do_k8s/
+            echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
+      - persist_to_workspace:
+          root: /tmp/do_k8s
+          paths:
+            - "*"
+  smoketest_k8s_deployment:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/do_k8s/
+      - run:
+          name: Smoke Test GKE Deployment
+          command: |
+            source /tmp/do_k8s/dok8s-endpoint
+            ./test/smoke_test $ENDPOINT              
+  destroy_k8s_cluster:
+    docker:
+      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc && cat $HOME/.terraformrc
+      - run:
+          name: Destroy App Deployment 
+          command: |
+            export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+            export DOCKER_IMAGE=$CLUSTER_NAME
+            cd do_k8s_deploy_app
+            terraform init
+            terraform destroy \
+              -var do_token=$DIGITAL_OCEAN_TOKEN \
+              -var cluster_name=$CLUSTER_NAME \
+              -var docker_image=$DOCKER_IMAGE \
+              -auto-approve
+      - run:
+          name: Destroy K8s Cluster 
+          command: |
+            export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.0.<< pipeline.number >>
+            export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"            
+            cd do_k8s_deploy_app
+            terraform init
+            terraform destroy \
+              -var do_token=$DIGITAL_OCEAN_TOKEN \
+              -var cluster_name=$CLUSTER_NAME \
+              -var docker_image=$DOCKER_IMAGE \
+              -auto-approve
+workflows:
+  scan_deploy:
+    jobs:
+      - scan_app
+      - scan_push_docker_image
+      - run_tests
+      - create_do_k8s_cluster
+      - approve_deploy_app:
+          type: approval
+          requires:
+            - create_do_k8s_cluster
+      - do_k8s_deploy_app:
+          requires:
+            - approve_deploy_app
+      - smoketest_k8s_deployment:
+          requires:
+            - do_k8s_deploy_app
+
+      - approve_destroy:
+          type: approval
+          requires:
+            - do_k8s_deploy_app
+            - smoketest_k8s_deployment
+      - destroy_k8s_cluster:
+          requires:
+            - approve_destroy
