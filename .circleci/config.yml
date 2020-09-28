@@ -127,6 +127,8 @@ jobs:
             export TAG=0.0.<< pipeline.number >>
             export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
             cd terraform/do_k8s_deploy_app/
+            doctl auth init -t $DIGITAL_OCEAN_TOKEN
+            doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
             terraform init
             terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
