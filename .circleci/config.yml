@@ -85,7 +85,7 @@ jobs:
             export DOCKER_IMAGE="docker-image=${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
             cd terraform/do_k8s_deploy_app
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
-            doctl kubernetes cluster kubeconfig save $DIGITAL_CLUSTER_NAME
+            doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
             terraform init
             terraform apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
