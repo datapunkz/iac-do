@@ -33,7 +33,7 @@ jobs:
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
-          target-file: Dockerfile
+          target-file: "Dockerfile"
           docker-image-name: $DOCKER_LOGIN/$IMAGE_NAME:$TAG
           project: ${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}-app
   run_tests:
