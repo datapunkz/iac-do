@@ -24,7 +24,7 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            export 'TAG=0.0.<< pipeline.number' >> $BASH_ENV
+            export 'TAG=0.0.<< pipeline.number >>' $BASH_ENV
             echo 'export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME' >> $BASH_ENV && source $BASH_ENV
             sudo npm -g install
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .             
