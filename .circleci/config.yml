@@ -28,14 +28,17 @@ jobs:
             export TAG=0.0.<< pipeline.number >>
             export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
-            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker push $DOCKER_LOGIN/$IMAGE_NAME
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
           target-file: "Dockerfile"
           docker-image-name: $DOCKER_LOGIN/$IMAGE_NAME:$TAG
           project: ${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}-app
+      - run:
+          name: Push to Docker Hub
+          command: |
+            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push $DOCKER_LOGIN/$IMAGE_NAME          
   run_tests:
     docker:
       - image: circleci/node:12
