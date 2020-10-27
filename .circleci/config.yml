@@ -164,7 +164,6 @@ workflows:
       - approve_destroy:
           type: approval
           requires:
-            - deploy_to_k8s
             - smoketest_k8s_deployment
       - destroy_k8s_cluster:
           requires:
