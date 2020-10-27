@@ -159,6 +159,7 @@ workflows:
       - deploy_to_k8s:
           requires:
             - create_do_k8s_cluster
+            - scan_push_docker_image
       - smoketest_k8s_deployment:
           requires:
             - deploy_to_k8s
