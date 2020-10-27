@@ -34,6 +34,7 @@ jobs:
           fail-on-issues: false
           monitor-on-build: false
           target-file: Dockerfile
+          docker-image-name: $DOCKER_LOGIN/$IMAGE_NAME:$TAG
   run_tests:
     docker:
       - image: circleci/node:12
