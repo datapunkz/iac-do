@@ -10,7 +10,7 @@ jobs:
       - run:
           name: Snyk Scan Application files 
           command: |
-            echo "Use snyk Orb here"
+            sudo npm -g install 
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
@@ -24,6 +24,7 @@ jobs:
       - run:
           name: Build Docker image
           command: |
+            sudo npm -g install 
             export TAG=0.0.<< pipeline.number >>
             export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
