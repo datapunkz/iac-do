@@ -28,7 +28,7 @@ resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   name   = var.cluster_name
   region = "sfo2"
   # Grab the latest version slug from `doctl kubernetes options versions`
-  version = "1.17.11-do.0"
+  version = "1.18.8-do.1"
 
   node_pool {
     name       = var.cluster_name
