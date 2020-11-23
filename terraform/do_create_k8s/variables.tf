@@ -12,3 +12,8 @@ variable "cluster_name" {
   }  
 }
 
+variable "do_k8s_ver_slug" {
+  type = string
+  description = "DO Kubernetes version slug. Get it using this: doctl kubernetes options versions"
+  default = "1.19.3-do.2"
+}
