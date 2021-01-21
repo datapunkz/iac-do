@@ -3,5 +3,5 @@ output "do_cluster" {
 }
 
 output "lb_public_ip" {
-  value = kubernetes_service.app.load_balancer_ingress.0.ip
+  value = kubernetes_service.app.spec.0.load_balancer_ip
 }
