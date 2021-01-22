@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var exports = module.exports = {};
-var versionNumber = "0.0.7"
+var versionNumber = "0.0.1"
 var content = ""
 
 function welcomeMessage(){
