@@ -6,6 +6,10 @@ terraform {
     digitalocean = {
       source = "digitalocean/digitalocean"
     }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+      version = "1.13.3"
+    }
     local = {
       source = "hashicorp/local"
     }
@@ -20,5 +24,5 @@ terraform {
 }
 
 provider "kubernetes" {
-
+ 
 }
