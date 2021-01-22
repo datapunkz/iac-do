@@ -58,7 +58,7 @@ jobs:
           path: test-results          
   create_do_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+      - image: ariv3ra/terraform-gcp:latest
     steps:
       - checkout
       - run:
@@ -80,7 +80,7 @@ jobs:
               -auto-approve
   deploy_to_k8s:
     docker:
-      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+      - image: ariv3ra/terraform-gcp:latest
     steps:
       - checkout
       - run:
@@ -123,7 +123,7 @@ jobs:
             ./test/smoke_test $ENDPOINT              
   destroy_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:tf-v0.13.3
+      - image: ariv3ra/terraform-gcp:latest
     steps:
       - checkout
       - run:
