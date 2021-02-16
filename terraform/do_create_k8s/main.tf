@@ -30,7 +30,7 @@ provider "digitalocean" {
 
 resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   name   = var.cluster_name
-  region = "nyc2"
+  region = "sfo2"
   # Grab the latest version slug from `doctl kubernetes options versions`
   version = var.do_k8s_slug_ver
 
