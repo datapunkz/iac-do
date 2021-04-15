@@ -10,10 +10,10 @@ jobs:
       - run: 
           name: Generate Pipeline config.yml file
           command: |
-            ./generate-pipeline-config "0.14.2" "1.59.0" # Terraform CLI and Digital Ocean versions to install
+            ./scripts/generate-pipeline-config "0.14.2" "1.59.0" # Terraform CLI and Digital Ocean versions to install
       - continuation/continue:
           parameters: '{}'
-          configuration_path: config.yml
+          configuration_path: configs/generated_config.yml
 workflows:
   setup-workflow:
     jobs:

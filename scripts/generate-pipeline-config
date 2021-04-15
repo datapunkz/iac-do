@@ -4,7 +4,7 @@ set -o pipefail
 TF_VERSION=$1 #Terraform CLI Version to install
 DOCTL_VERSION=$2 #Digital Ocean CLI Version to install
 
-cat << EOF > config.yml
+cat << EOF > configs/generated_config.yml
 version: 2.1
 orbs:
   docker: circleci/docker@1.5.0
