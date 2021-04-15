@@ -2,6 +2,7 @@ version: 2.1
 orbs:
   docker: circleci/docker@1.5.0
   node: circleci/node@4.2.0
+  snyk: snyk/snyk@0.0.12
   terraform: circleci/terraform@2.0.0  
 jobs:
   scan_app:
