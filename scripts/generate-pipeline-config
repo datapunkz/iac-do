@@ -100,7 +100,7 @@ jobs:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
             export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
-            export TAG=0.0.<< pipeline.number >>
+            export TAG=0.1.<< pipeline.number >>
             export DOCKER_IMAGE="\${DOCKER_LOGIN}/\${CIRCLE_PROJECT_REPONAME}:\$TAG"
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin          
