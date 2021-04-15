@@ -3,16 +3,18 @@ setup: true
 orbs:
   continuation: circleci/continuation@0.1.0
 jobs:
-  continue:
+  generate-config:
     executor: continuation/default
     steps:
       - checkout
-      - run: |
-          ./generate-pipeline-config
+      - run: 
+          name: Generate Pipeline config.yml file
+          command: |
+            ./generate-pipeline-config
       - continuation/continue:
           parameters: '{}'
           configuration_path: config.yml
 workflows:
   setup-workflow:
     jobs:
-      - continue
+      - generate-config

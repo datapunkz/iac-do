@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash 
+set -o pipefail
 
 cat << EOF > config.yml
 version: 2.1
