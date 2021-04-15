@@ -8,7 +8,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          generate-pipeline-config
+          ./generate-pipeline-config
       - continuation/continue:
           parameters: '{}'
           configuration_path: config.yml
