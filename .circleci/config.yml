@@ -1,6 +1,4 @@
 # This file demonstrates how to leverage Setup Workflows to generate dynamic config files using scripts.
-# move this file to .circleci/ dir: 
-#  cp dc_example_configs/sw_gen_with_script.yml .circleci/config.yml
 
 version: 2.1
 setup: true
