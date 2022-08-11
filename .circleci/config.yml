@@ -104,12 +104,12 @@ jobs:
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
 
-            terraform apply \
+            terraform -chdir=./terraform/do_k8s_deploy_app apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
               -auto-approve
-              # Save the Load Balancer Public IP Address
+            # Save the Load Balancer Public IP Address
             export ENDPOINT="$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s/
             echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint            
