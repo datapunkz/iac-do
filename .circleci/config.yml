@@ -157,14 +157,14 @@ jobs:
           path: ./terraform/do_create_k8s        
       - run:
           name: Destroy K8s Cluster 
-            command: |
-              export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
-              export TAG=0.0.<< pipeline.number >>
+          command: |
+            export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.0.<< pipeline.number >>
 
-              terraform -chdir=./terraform/do_create_k8s destroy \
-                -var do_token=$DIGITAL_OCEAN_TOKEN \
-                -var cluster_name=$CLUSTER_NAME \
-                -auto-approve
+            terraform -chdir=./terraform/do_create_k8s destroy \
+              -var do_token=$DIGITAL_OCEAN_TOKEN \
+              -var cluster_name=$CLUSTER_NAME \
+              -auto-approve
 workflows:
   scan_deploy:
     jobs:
