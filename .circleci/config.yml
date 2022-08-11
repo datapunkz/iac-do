@@ -12,7 +12,7 @@ commands:
     steps:
       - run:
           name: Install doctl client
-          commad: |
+          command: |
             cd ~
             wget https://github.com/digitalocean/doctl/releases/download/v<<parameters.version>>/doctl-<<parameters.version>>-linux-amd64.tar.gz
             tar xf ~/doctl-<<parameters.version>>-linux-amd64.tar.gz
