@@ -68,7 +68,7 @@ jobs:
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
       - terraform/install:
           terraform_version: "1.0.6"
-          arch: "x86"
+          arch: "amd64"
           os: "linux"
       - terraform/init:
           path: ./terraform/do_create_k8s      
@@ -95,7 +95,7 @@ jobs:
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
       - terraform/install:
           terraform_version: "1.0.6"
-          arch: "x86"
+          arch: "amd64"
           os: "linux"      
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app
@@ -143,7 +143,7 @@ jobs:
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc && cat $HOME/.terraformrc
       - terraform/install:
           terraform_version: "1.0.6"
-          arch: "x86"
+          arch: "amd64"
           os: "linux"
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app/
