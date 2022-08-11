@@ -5,7 +5,7 @@ orbs:
 jobs:
   scan_app:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:12
     steps:
       - checkout
       - run:
@@ -17,7 +17,7 @@ jobs:
           monitor-on-build: false
   scan_push_docker_image:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:12
     steps:
       - checkout
       - setup_remote_docker:
@@ -78,7 +78,7 @@ jobs:
       #     os: "linux"
       - terraform/init:
           path: ./terraform/do_create_k8s
-            terraform apply \
+      - run: terraform apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var do_k8s_slug_ver=$DO_K8S_SLUG_VER \
@@ -97,11 +97,13 @@ jobs:
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
             export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-            cd terraform/do_k8s_deploy_app
+            # cd terraform/do_k8s_deploy_app
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
-            terraform init
-            terraform apply \
+            # terraform init
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app            
+      - run: terraform apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
@@ -116,7 +118,7 @@ jobs:
             - "*"
   smoketest_k8s_deployment:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:12
     steps:
       - checkout
       - attach_workspace:
@@ -140,11 +142,13 @@ jobs:
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
             export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-            cd terraform/do_k8s_deploy_app/
+            # cd terraform/do_k8s_deploy_app/
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
-            terraform init
-            terraform destroy \
+            # terraform init
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app/            
+      - run: terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
@@ -154,9 +158,10 @@ jobs:
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            cd terraform/do_create_k8s/
-            terraform init
-            terraform destroy \
+            # cd terraform/do_create_k8s/
+      - terraform/init:
+          path: ./terraform/do_create_k8s
+      - run: terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -auto-approve
