@@ -6,7 +6,7 @@ orbs:
 jobs:
   scan_app:
     docker:
-      - image: ccimg/node:14.16.0
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
@@ -22,7 +22,6 @@ jobs:
     steps:
       - checkout
       - docker/check
-
       - setup_remote_docker:
           docker_layer_caching: false
       - run:
@@ -80,7 +79,7 @@ jobs:
       #     os: "linux"
       - terraform/init:
           path: ./terraform/do_create_k8s
-      - run: terraform apply \
+      - run: terraform -chdir=./terraform/do_create_k8s apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var do_k8s_slug_ver=$DO_K8S_SLUG_VER \
@@ -154,7 +153,7 @@ jobs:
           path: ./terraform/do_k8s_deploy_app/            
       - run: 
           command: |
-            terraform destroy \
+            terraform -chdir=./terraform/do_k8s_deploy_app/ destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
@@ -169,7 +168,7 @@ jobs:
           path: ./terraform/do_create_k8s
       - run: 
           command: |
-            terraform destroy \
+            terraform -chdir=./terraform/do_create_k8s destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -auto-approve
