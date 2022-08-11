@@ -43,7 +43,7 @@ jobs:
             docker push $DOCKER_LOGIN/$IMAGE_NAME          
   run_tests:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
@@ -60,16 +60,16 @@ jobs:
           path: test-results          
   create_do_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
-      # - terraform/install:
-      #     terraform_version: "1.0.6"
-      #     arch: "x86"
-      #     os: "linux"
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "x86"
+          os: "linux"
       - terraform/init:
           path: ./terraform/do_create_k8s      
       - run:
@@ -87,12 +87,16 @@ jobs:
               -auto-approve
   deploy_to_k8s:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "x86"
+          os: "linux"      
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app
       - run:
@@ -114,7 +118,7 @@ jobs:
             mkdir -p /tmp/do_k8s/
             echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint            
       - persist_to_workspace:
-          root: /tmp/do_k8s
+          root: /tmp/do_k8s/
           paths:
             - "*"
   smoketest_k8s_deployment:
@@ -131,12 +135,16 @@ jobs:
             ./test/smoke_test $ENDPOINT              
   destroy_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc && cat $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "x86"
+          os: "linux"
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app/
       - run:
