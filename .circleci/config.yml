@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   snyk: snyk/snyk@1.2.3
+  docker: circleci/docker@1.5.0
   terraform: circleci/terraform@3.0.0
 jobs:
   scan_app:
@@ -20,6 +21,8 @@ jobs:
       - image: cimg/node:12
     steps:
       - checkout
+      - docker/check
+
       - setup_remote_docker:
           docker_layer_caching: false
       - run:
@@ -38,7 +41,6 @@ jobs:
       - run:
           name: Push to Docker Hub
           command: |
-            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
             docker push $DOCKER_LOGIN/$IMAGE_NAME          
   run_tests:
     docker:
