@@ -1,10 +1,27 @@
 version: 2.1
 orbs:
-  snyk: snyk/snyk@0.0.12  
+  snyk: snyk/snyk@1.2.3
+  docker: circleci/docker@1.5.0
+  terraform: circleci/terraform@3.0.0
+# Inline Commands to install DigitalOcean doctl cli tool
+commands:
+  install_doctl:
+    parameters:
+      version:
+        default: "1.78.0"
+        type: string
+    steps:
+      - run:
+          name: Install doctl client
+          command: |
+            cd ~
+            wget https://github.com/digitalocean/doctl/releases/download/v<<parameters.version>>/doctl-<<parameters.version>>-linux-amd64.tar.gz
+            tar xf ~/doctl-<<parameters.version>>-linux-amd64.tar.gz
+            sudo mv ~/doctl /usr/local/bin
 jobs:
   scan_app:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
@@ -16,9 +33,10 @@ jobs:
           monitor-on-build: false
   scan_push_docker_image:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:14.16.0
     steps:
       - checkout
+      - docker/check
       - setup_remote_docker:
           docker_layer_caching: false
       - run:
@@ -37,11 +55,10 @@ jobs:
       - run:
           name: Push to Docker Hub
           command: |
-            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
             docker push $DOCKER_LOGIN/$IMAGE_NAME          
   run_tests:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - run:
@@ -58,12 +75,20 @@ jobs:
           path: test-results          
   create_do_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
+      - install_doctl:
+          version: "1.78.0"
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc   
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./terraform/do_create_k8s      
       - run:
           name: Create K8s Cluster on DigitalOcean 
           command: |
@@ -71,47 +96,54 @@ jobs:
             export TAG=0.0.<< pipeline.number >>
             export DO_K8S_SLUG_VER="$(doctl kubernetes options versions \
               -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
-            cd terraform/do_create_k8s
-            terraform init
-            terraform apply \
+
+            terraform -chdir=./terraform/do_create_k8s apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var do_k8s_slug_ver=$DO_K8S_SLUG_VER \
               -auto-approve
   deploy_to_k8s:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
+      - install_doctl:
+          version: "1.78.0"      
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "amd64"
+          os: "linux"      
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app
       - run:
-          name: Deploy Application to K8s on DigitalOcean 
+          name: Deploy Application to K8s on DigitalOcean
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
             export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-            cd terraform/do_k8s_deploy_app
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
-            terraform init
-            terraform apply \
+
+            terraform -chdir=./terraform/do_k8s_deploy_app apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
               -auto-approve
-              # Save the Load Balancer Public IP Address
-              export ENDPOINT="$(terraform output lb_public_ip)"
-              mkdir -p /tmp/do_k8s/
-              echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
+
+            # Save the Load Balancer Public IP Address
+            export ENDPOINT="$(terraform -chdir=./terraform/do_k8s_deploy_app output lb_public_ip)"
+            mkdir -p /tmp/do_k8s/
+            echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint            
       - persist_to_workspace:
-          root: /tmp/do_k8s
+          root: /tmp/do_k8s/
           paths:
             - "*"
   smoketest_k8s_deployment:
     docker:
-      - image: circleci/node:12
+      - image: cimg/node:14.16.0
     steps:
       - checkout
       - attach_workspace:
@@ -123,37 +155,49 @@ jobs:
             ./test/smoke_test $ENDPOINT              
   destroy_k8s_cluster:
     docker:
-      - image: ariv3ra/terraform-gcp:latest
+      - image: cimg/node:14.16.0
     steps:
       - checkout
+      - install_doctl:
+          version: "1.78.0"      
       - run:
           name: Create .terraformrc file locally
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc && cat $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "1.0.6"
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app/
       - run:
           name: Destroy App Deployment 
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"
-            cd terraform/do_k8s_deploy_app/
+            export DOCKER_IMAGE="${DOCKER_LOGIN}/${CIRCLE_PROJECT_REPONAME}:$TAG"          
             doctl auth init -t $DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
-            terraform init
-            terraform destroy \
+
+            terraform -chdir=./terraform/do_k8s_deploy_app/ apply -destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
               -auto-approve
+
+      - terraform/init:
+          path: ./terraform/do_create_k8s        
       - run:
           name: Destroy K8s Cluster 
           command: |
             export CLUSTER_NAME=${CIRCLE_PROJECT_REPONAME}
             export TAG=0.0.<< pipeline.number >>
-            cd terraform/do_create_k8s/
-            terraform init
-            terraform destroy \
+            export DO_K8S_SLUG_VER="$(doctl kubernetes options versions \
+              -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
+            
+            terraform -chdir=./terraform/do_create_k8s apply -destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
+              -var do_k8s_slug_ver=$DO_K8S_SLUG_VER \
               -auto-approve
 workflows:
   scan_deploy:
