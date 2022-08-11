@@ -132,7 +132,7 @@ jobs:
               -var docker_image=$DOCKER_IMAGE \
               -auto-approve
             # Save the Load Balancer Public IP Address
-            export ENDPOINT="$(terraform output lb_public_ip)"
+            export ENDPOINT="$(terraform -chdir=./terraform/do_k8s_deploy_app output lb_public_ip)"
             mkdir -p /tmp/do_k8s/
             echo 'export ENDPOINT='${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint            
       - persist_to_workspace:
