@@ -103,7 +103,9 @@ jobs:
             # terraform init
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app            
-      - run: terraform apply \
+      - run: 
+          command: | 
+            terraform apply \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
@@ -148,7 +150,9 @@ jobs:
             # terraform init
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app/            
-      - run: terraform destroy \
+      - run: 
+          command: |
+            terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -var docker_image=$DOCKER_IMAGE \
@@ -161,7 +165,9 @@ jobs:
             # cd terraform/do_create_k8s/
       - terraform/init:
           path: ./terraform/do_create_k8s
-      - run: terraform destroy \
+      - run: 
+          command: |
+            terraform destroy \
               -var do_token=$DIGITAL_OCEAN_TOKEN \
               -var cluster_name=$CLUSTER_NAME \
               -auto-approve
